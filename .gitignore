@@ -1,13 +1,78 @@
-# History files
-.Rhistory
-.Rapp.history
+1.	Explore the data and undertake any cleaning/pre-processing that you deem necessary for the data to be analyzed.
+The concept of Text classification is the process of classifying documents in predefined categories based on their content. Text classification is the primary requirement of text retrieval systems, which retrieve texts in response to a user query, and text understanding systems, which transform text in some way such as producing summaries, answering questions or extracting data.
 
-# Example code in package build process
-*-Ex.R
+The cleaning/pre-processing methods I have undertaken are:
+•	Convert all the text into lowercase
+•	Remove punctuation
+•	Remove numbers
+•	Remove excessive spacing between words
 
-# RStudio files
-.Rproj.user/
+The data given to us here is based on the news based on the fact what’s going on in various companies.
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+The data is excessively very large and has details some of which are irrelevant. There was a need of cleaning and pre-processing so that only relevant data could be dealt with.
+
+
+Code:
+
+data <- read.csv("~/Desktop/reuters.csv",header= TRUE,sep=",")
+dat <- readLines("~/Desktop/reuters.csv")
+length(dat)
+library(tm)
+library(SnowballC)
+doc.vec <- VectorSource(dat); rm(dat)
+doc.corpus <- Corpus(doc.vec); rm(doc.vec)
+inspect(doc.corpus)
+summary(doc.corpus)
+tolower(doc.corpus)
+gsub("[[:punct:]]","",doc.corpus)
+doc.corpus <- tm_map(doc.corpus,removeNumbers)
+doc.corpus <- tm_map(doc.corpus,stripWhitespace)
+doc.corpus <- tm_map(doc.corpus,stemDocument)
+inspect(doc.corpus)
+
+2.	Obtain feature representations of the documents/news articles as discussed in the text mining lectures. Try a version where you use topic models as features. Try topic models on their own as well as in conjunction with other features. Your final report must provide a summary of your assumptions and features and a rationale for why you decided to use them, as well as an explanation of how you obtained them.
+
+The bag of words model is one of the methods used to obtain features from a document. In this model, a selected text is treated as a bag of the words it contains. 
+
+The topic model used here is LDA.
+
+Code:
+
+tdm <- TermDocumentMatrix(doc.corpus)
+lda <- LDA(tdm,5)
+
+ I decided to go with LDA method because it is very easy to implement. I used it because it is based on Bayesian topic models and it is very widely used.
+
+There were some documents present in the data, which had zero words. There was a need to get rid of those documents.
+
+
+
+
+
+3.	Build classifiers, using either R or Python libraries to predict the TOPICS tags for documents. Focus your efforts on the 10 most populous classes, namely: (earn, acquisitions, money-fx, grain, crude, trade, interest, ship, wheat, corn). Use the training data for building the models and comparing their accuracy, precision and recall. Use the test set only to get an estimate of the accuracy, precision and recall of the “optimal” model based on your analysis using the training data. For the performance on the training data, report micro and macro averaged measures and explain the difference between the two.
+
+
+
+      Code:
+ 
+for(i in 1:10) { 
+test_ind <- which(folds==i, arr.ind=TRUE) 
+test_data <- feature[test_ind, ]
+train_data <- feature[-test_ind, ] 
+train_ind <- feature$topic[-test_ind]
+
+ # Performing classification naive Bayes 
+
+NB <- naiveBayes(topic ~ ., data=train_data)
+predict.NB <- predict(NB, test_data[, -11]) 
+tab.NB <- table(test_data$topic, predict.nB)
+ lda.NB <- lda.NB + tab.NB 
+lda_NB[i] <- sum(diag(tab.NB))/nrow(test_data)
+
+ # Performing classification SVM 
+
+SVM <- svm(topic ~ ., data = train_data) 
+predict.SVM <- predict(SVM, test_data[, -11]) 
+tab.SVM <- table(test_data$topic, predict.SVM) 
+lda.SVM <- lda.SVM + tab.SVM
+lda_SVM[i] <- sum(diag(tab.SVM))/nrow(test_data)
